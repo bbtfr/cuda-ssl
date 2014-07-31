@@ -1,0 +1,5 @@
+# Ignore build files.
+.fuse_hidden*
+*.o
+*.log
+test
