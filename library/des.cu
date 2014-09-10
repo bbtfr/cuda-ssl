@@ -787,7 +787,7 @@ exit:
 
 #define DATASIZE 1000L
 #define LOOPS 1000L
-extern "C" int des_performance_test(int verbose, cuda_device *d) {
+extern "C" int des_performance_test_with_data_transform(int verbose, cuda_device *d) {
   unsigned char key[DES_KEY_SIZE];
   unsigned char buf[MAX_THREAD * DATASIZE][DES_BLOCK_SIZE];
   des_context ctx;
@@ -821,7 +821,7 @@ extern "C" int des_performance_test(int verbose, cuda_device *d) {
   return 0;
 }
 
-extern "C" int des3_performance_test(int verbose, cuda_device *d) {
+extern "C" int des3_performance_test_with_data_transform(int verbose, cuda_device *d) {
   unsigned char key[DES_KEY_SIZE];
   unsigned char buf[MAX_THREAD * DATASIZE][DES_BLOCK_SIZE];
   des3_context ctx;
@@ -851,6 +851,84 @@ extern "C" int des3_performance_test(int verbose, cuda_device *d) {
 
   if (verbose != 0)
     printf("\n");
+
+  return 0;
+}
+
+extern "C" int des_performance_test_without_data_transform(int verbose, cuda_device *d) {
+  unsigned char key[DES_KEY_SIZE];
+  des_context ctx;
+  int i; double h;
+
+  CUDA_START_TIME
+
+  memset(key, 0, DES_KEY_SIZE);
+  des_init(&ctx);
+
+  des_setkey_enc(&ctx, key);
+  des_transfer_context(&ctx);
+
+  for (int i = 0; i < LOOPS; ++i)
+    des_crypt_ecb_kernel<<<DATASIZE, MAX_THREAD>>>(d->device_data_in, d->device_data_out);
+
+  CUDA_STOP_TIME("  DES -ECB- 56 (enc only)")
+  printf("    Block Data size: %ld\n", MAX_THREAD * DES_BLOCK_SIZE * DATASIZE);
+  printf("    Block Loops: %ld\n", LOOPS);
+
+  TALK_LIKE_A_HUMAN_BEING(MAX_THREAD * DES_BLOCK_SIZE * DATASIZE * LOOPS, "    ", " in total\n");
+  TALK_LIKE_A_HUMAN_BEING(MAX_THREAD * DES_BLOCK_SIZE * DATASIZE * LOOPS / gpu_time * 1000, "    ", "/sec\n");
+
+  printf("    %ld loops in total\n", LOOPS * MAX_THREAD * DATASIZE);
+  printf("    %f loops/sec\n", LOOPS * MAX_THREAD * DATASIZE / gpu_time * 1000);
+
+  if (verbose != 0)
+    printf("\n");
+
+  return 0;
+}
+
+extern "C" int des3_performance_test_without_data_transform(int verbose, cuda_device *d) {
+  unsigned char key[DES_KEY_SIZE];
+  des3_context ctx;
+  int i; double h;
+
+  CUDA_START_TIME
+
+  memset(key, 0, DES_KEY_SIZE);
+  des3_init(&ctx);
+
+  des3_set3key_enc(&ctx, key);
+  des3_transfer_context(&ctx);
+
+  for (int i = 0; i < LOOPS; ++i)
+    des3_crypt_ecb_kernel<<<DATASIZE, MAX_THREAD>>>(d->device_data_in, d->device_data_out);
+
+  CUDA_STOP_TIME("  DES3-ECB-128 (enc only)")
+  printf("    Block Data size: %ld\n", MAX_THREAD * DES_BLOCK_SIZE * DATASIZE);
+  printf("    Block Loops: %ld\n", LOOPS);
+
+  TALK_LIKE_A_HUMAN_BEING(MAX_THREAD * DES_BLOCK_SIZE * DATASIZE * LOOPS, "    ", " in total\n");
+  TALK_LIKE_A_HUMAN_BEING(MAX_THREAD * DES_BLOCK_SIZE * DATASIZE * LOOPS / gpu_time * 1000, "    ", "/sec\n");
+
+  printf("    %ld loops in total\n", LOOPS * MAX_THREAD * DATASIZE);
+  printf("    %f loops/sec\n", LOOPS * MAX_THREAD * DATASIZE / gpu_time * 1000);
+
+  if (verbose != 0)
+    printf("\n");
+
+  return 0;
+}
+
+extern "C" int des_performance_test(int verbose, cuda_device *d) {
+  des_performance_test_with_data_transform(verbose, d);
+  des_performance_test_without_data_transform(verbose, d);
+
+  return 0;
+}
+
+extern "C" int des3_performance_test(int verbose, cuda_device *d) {
+  des3_performance_test_with_data_transform(verbose, d);
+  des3_performance_test_without_data_transform(verbose, d);
 
   return 0;
 }

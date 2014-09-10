@@ -1,7 +1,7 @@
 NVCC      := /usr/local/cuda/bin/nvcc
 INCLUDES  := -Iinclude
 LIBS      := 
-CFLAGS    := $(INCLUDES) $(LIBS) -arch=compute_35 -code=sm_35
+CFLAGS    := $(INCLUDES) $(LIBS) -arch=compute_20 -code=sm_20
 
 LIBOBJ    := aes.o des.o sha1.o md5.o md4.o test.o
 

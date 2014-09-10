@@ -703,7 +703,7 @@ exit:
 
 #define DATASIZE 1000L
 #define LOOPS 1000L
-extern "C" int aes_performance_test(int verbose, cuda_device *d) {
+extern "C" int aes_performance_test_with_data_transform(int verbose, cuda_device *d) {
   unsigned char key[AES_KEY_SIZE];
   unsigned char buf[MAX_THREAD * DATASIZE][AES_BLOCK_SIZE];
   aes_context ctx;
@@ -733,6 +733,45 @@ extern "C" int aes_performance_test(int verbose, cuda_device *d) {
 
   if (verbose != 0)
     printf("\n");
+
+  return 0;
+}
+
+extern "C" int aes_performance_test_without_data_transform(int verbose, cuda_device *d) {
+  unsigned char key[AES_KEY_SIZE];
+  aes_context ctx;
+  int i; double h;
+
+  CUDA_START_TIME
+
+  memset(key, 0, AES_KEY_SIZE);
+  aes_init(&ctx);
+
+  aes_setkey_enc(&ctx, key, 128);
+  aes_transfer_context(&ctx);
+
+  for (int i = 0; i < LOOPS; ++i)
+    aes_encrypt_ecb_kernel<<<DATASIZE, MAX_THREAD>>>(d->device_data_in, d->device_data_out);
+
+  CUDA_STOP_TIME("  AES-ECB-128 (enc only)")
+  printf("    Block Data size: %ld\n", MAX_THREAD * AES_BLOCK_SIZE * DATASIZE);
+  printf("    Block Loops: %ld\n", LOOPS);
+
+  TALK_LIKE_A_HUMAN_BEING(MAX_THREAD * AES_BLOCK_SIZE * DATASIZE * LOOPS, "    ", " in total\n");
+  TALK_LIKE_A_HUMAN_BEING(MAX_THREAD * AES_BLOCK_SIZE * DATASIZE * LOOPS / gpu_time * 1000, "    ", "/sec\n");
+
+  printf("    %ld loops in total\n", LOOPS * MAX_THREAD * DATASIZE);
+  printf("    %f loops/sec\n", LOOPS * MAX_THREAD * DATASIZE / gpu_time * 1000);
+
+  if (verbose != 0)
+    printf("\n");
+
+  return 0;
+}
+
+extern "C" int aes_performance_test(int verbose, cuda_device *d) {
+  aes_performance_test_with_data_transform(verbose, d);
+  aes_performance_test_without_data_transform(verbose, d);
 
   return 0;
 }
