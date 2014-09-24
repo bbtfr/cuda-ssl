@@ -25,12 +25,12 @@ int main(int argc, char const *argv[]) {
   des_self_test(verbose, &device);
   des_performance_test(verbose, &device);
   des3_performance_test(verbose, &device);
-  // sha1_self_test(verbose, &device);
-  // sha1_performance_test(verbose, &device);
-  // md5_self_test(verbose, &device);
-  // md5_performance_test(verbose, &device);
-  // md4_self_test(verbose, &device);
-  // md4_performance_test(verbose, &device);
+  sha1_self_test(verbose, &device);
+  sha1_performance_test(verbose, &device);
+  md5_self_test(verbose, &device);
+  md5_performance_test(verbose, &device);
+  md4_self_test(verbose, &device);
+  md4_performance_test(verbose, &device);
 
   cuda_deviceFinish(&device);
 
